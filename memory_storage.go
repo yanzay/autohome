@@ -5,7 +5,8 @@ import (
 )
 
 type memoryStorage struct {
-	Settings settings
+	Settings      settings
+	ScheduleItems []scheduleItem
 }
 
 func (s *memoryStorage) getSettings() settings {
@@ -18,4 +19,12 @@ func (s *memoryStorage) saveSettings(sets settings) {
 	s.Settings.YahooCityId = sets.YahooCityId
 	s.Settings.YahooTempUnit = sets.YahooTempUnit
 	fmt.Printf("Settings saved. %v\n", s.Settings)
+}
+
+func (s *memoryStorage) getSchedules() []scheduleItem {
+	return s.ScheduleItems
+}
+
+func (s *memoryStorage) saveSchedules(items []scheduleItem) {
+	s.ScheduleItems = items
 }
