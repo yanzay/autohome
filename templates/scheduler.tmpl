@@ -1,12 +1,18 @@
 <form method="POST">
   <div id="schedulerItems">
-  {{range .}}
+  {{range $row := .}}
     <div class="form-group row">
       <div class="col-sm-3">
-        <input type="text" class="form-control" name="cronStrings[]" value="{{.CronString}}">
+        <input type="text" class="form-control cron-input" name="cronStrings[]" value="{{$row.CronString}}">
       </div>
       <div class="col-sm-3">
-        <input type="text" class="form-control" name="funcNames[]" value="{{.FuncName}}">
+        <select class="form-control" name="funcNames[]">
+          {{range $f := functions}}
+          <option value="{{$f.Module}}:{{$f.FuncName}}"{{if (and (eq $row.Module $f.Module) (eq $row.FuncName $f.FuncName))}} selected="selected"{{end}}>
+            {{$f.Module}}: {{$f.FuncName}}
+          </option>
+          {{end}}
+        </select>
       </div>
       <a href="javascript:void(0);" class="btn btn-danger deleteItem">Delete</a>
     </div>
@@ -17,3 +23,23 @@
     <input type="submit" class="btn btn-primary">
   </div>
 </form>
+
+<div style="display: none;">
+  <div id="row">
+    <div class="form-group row">
+      <div class="col-sm-3">
+        <input type="text" class="form-control cron-input" name="cronStrings[]" value="* * * * * *">
+      </div>
+      <div class="col-sm-3">
+        <select class="form-control" name="funcNames[]">
+          {{range functions}}
+          <option value="{{.Module}}:{{.FuncName}}">
+            {{.Module}}: {{.FuncName}}
+          </option>
+          {{end}}
+        </select>
+      </div>
+      <a href="javascript:void(0);" class="btn btn-danger deleteItem">Delete</a>
+    </div>
+  </div>
+</div>

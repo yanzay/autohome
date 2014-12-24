@@ -1,5 +1,5 @@
 $(function() {
   $("#toggle-pin").click(function(){
-    $.post("/control");
+    $.post("/arduino/control");
   })
 });
