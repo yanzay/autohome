@@ -67,7 +67,6 @@ func (a *ArduinoModule) Send(command string) {
     return
   }
   com, _ := regexp.Compile("(.*)_([0-9]+)")
-  // pin, _ := regexp.Compile(".*_([0-9]+)")
   var p int
 
   matches := com.FindStringSubmatch(command)
@@ -77,10 +76,7 @@ func (a *ArduinoModule) Send(command string) {
     p, _ = strconv.Atoi(matches[2])
     fmt.Printf(" with pin %v\n", byte(p))
   }
-  // if withPin != "" {
-  //   p, _ = strconv.Atoi(pin.FindString(command))
-  //   command = withPin
-  // }
+
   go func() {
     switch command {
     case "lightOn":
