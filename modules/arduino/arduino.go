@@ -29,6 +29,8 @@ type tempItem struct {
 }
 
 func (a *ArduinoModule) Initialize(options map[string]string, db interface{}) {
+  a.db = db.(TemperatureGetSaver)
+  a.options = options
   // ar, err := automata.NewSerial("/dev/tty.usbmodem1411")
   ar, err := automata.New(automata.EthernetArduino, "192.168.0.13:13666")
   if err != nil {
@@ -40,8 +42,6 @@ func (a *ArduinoModule) Initialize(options map[string]string, db interface{}) {
     ipin, _ := strconv.Atoi(pin)
     ar.SetDigitalOutput(byte(ipin))
   }
-  a.db = db.(TemperatureGetSaver)
-  a.options = options
   a.arduino = ar
 }
 
