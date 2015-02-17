@@ -24,5 +24,6 @@ _testmain.go
 *.prof
 
 data.db
+test.db
 autohome
 *.bak

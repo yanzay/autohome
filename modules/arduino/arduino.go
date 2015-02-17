@@ -3,7 +3,9 @@ package arduino
 import (
 	"encoding/binary"
 	"fmt"
+	"log"
 	"math"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -77,9 +79,7 @@ func (a *ArduinoModule) Send(command string) {
 	matches := com.FindStringSubmatch(command)
 	if len(matches) > 2 {
 		command = matches[1]
-		fmt.Printf(command)
 		p, _ = strconv.Atoi(matches[2])
-		fmt.Printf(" with pin %v\n", byte(p))
 	}
 
 	go func() {
@@ -101,15 +101,16 @@ func (a *ArduinoModule) Send(command string) {
 	}()
 }
 
-func (a *ArduinoModule) Handle(method, action string, params ...string) (string, map[string]string) {
+func (a *ArduinoModule) Handle(method, action string, params url.Values) (string, map[string]string) {
 	if method == "GET" {
 		switch action {
 		case "control":
 			return "arduino/control", map[string]string{}
 		case "stats":
-			return "arduino/stats", a.getLastStats(hourAgo().Format("2006-01-02T15:04:05.000Z"))
+			period := params.Get("period")
+			return "arduino/stats", a.getLastStatsForPeriod(period, "")
 		case "last_stats":
-			return "", a.getLastStats(params[0])
+			return "", a.getLastStatsForPeriod(params.Get("period"), params.Get("lastDate"))
 		}
 	} else {
 		switch action {
@@ -134,10 +135,52 @@ func (a *ArduinoModule) getStats() map[string]string {
 	return result
 }
 
-func (a *ArduinoModule) getLastStats(params ...string) map[string]string {
+func (a *ArduinoModule) getLastStatsForPeriod(period string, lastDate string) map[string]string {
 	var stats []ArduinoTemperature
 	result := make(map[string]string)
-	t, _ := time.Parse("2006-01-02T15:04:05.000Z", params[0])
+	var duration time.Duration
+	groupFormat := "%Y-%m-%dT%H:%M:%S"
+	switch period {
+	case "5m":
+		duration = 5 * time.Minute
+	case "1h":
+		duration = 1 * time.Hour
+		groupFormat = "%Y-%m-%dT%H:%M:00"
+	case "1d":
+		duration = 24 * time.Hour
+		groupFormat = "%Y-%m-%dT%H:00:00"
+	case "30d":
+		duration = 30 * 24 * time.Hour
+		groupFormat = "%Y-%m-%dT00:00:00"
+	case "1Y":
+		duration = 365 * 30 * 24 * time.Hour
+		groupFormat = "%Y-%m-01T00:00:00"
+	default:
+		duration = 5 * time.Minute
+	}
+	var start time.Time
+	var err error
+	if lastDate != "" {
+		start, err = time.Parse("2006-01-02T15:04:05.000Z", lastDate)
+		if err != nil {
+			log.Println(err)
+			start = time.Now().Add(-duration)
+		}
+	} else {
+		start = time.Now().Add(-duration)
+	}
+	query := fmt.Sprintf("SELECT STRFTIME('%s', DateTime) DateTime, AVG(Value) Value FROM arduino_temperature WHERE STRFTIME('%s', DateTime) > STRFTIME('%s', '%s') GROUP BY STRFTIME('%s', DateTime)", groupFormat, groupFormat, groupFormat, start.Format("2006-01-02T15:04:05"), groupFormat)
+	a.db.Query(query).Rows(&stats)
+	for _, stat := range stats {
+		result[stat.DateTime] = fmt.Sprintf("%v", stat.Value)
+	}
+	return result
+}
+
+func (a *ArduinoModule) getLastStats(lastDate, period string) map[string]string {
+	var stats []ArduinoTemperature
+	result := make(map[string]string)
+	t, _ := time.Parse("2006-01-02T15:04:05.000Z", lastDate)
 	formatted := t.Format("2006-01-02T15:04:05")
 	a.db.Where(ArduinoTemperature{}, fmt.Sprintf("DateTime > '%s'", formatted)).Run(&stats)
 	for _, stat := range stats {

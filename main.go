@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/url"
 	"time"
 
 	"github.com/yanzay/autohome/modules/arduino"
@@ -19,7 +20,7 @@ type Module interface {
 	Functions() []string
 	Settings() []string
 	Send(string)
-	Handle(string, string, ...string) (string, map[string]string)
+	Handle(string, string, url.Values) (string, map[string]string)
 	Menus() []string
 }
 
