@@ -1,6 +1,7 @@
 $(function () {
 
     parseHash = function(hash) {
+        console.log(hash);
         var data = [];
         for (var k in hash) {
             date = Date.parse(k);
@@ -20,7 +21,12 @@ $(function () {
                     that = this
                     setInterval(function () {
                         var series = that.series[0];
-                        var lastDate = new Date(series.data[series.data.length-1].x);
+                        var lastDate;
+                        if (series.data.length > 0) {
+                            lastDate = new Date(series.data[series.data.length-1].x);
+                        } else {
+                            lastDate = new Date("01-01-1970")
+                        }
                         $.get('/arduino/last_stats', {lastDate: lastDate.toISOString()}, function(data){
                             var d = parseHash(data);
                             for (var i = 0; i < d.length; i++) {
