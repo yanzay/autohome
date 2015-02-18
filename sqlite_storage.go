@@ -25,7 +25,8 @@ func NewSqliteStorage(params ...string) *sqliteStorage {
 	if len(params) > 0 {
 		databaseName = params[0]
 	}
-	store.db, err = jet.Open("sqlite3", fmt.Sprintf("./%s.db", databaseName))
+	fileName := fmt.Sprintf("./%s.db", databaseName)
+	store.db, err = jet.Open("sqlite3", fmt.Sprintf("file:%s?cache=shared&mode=rwc", fileName))
 	if err != nil {
 		fmt.Printf("Error connecting to database %s\n", err)
 	}
