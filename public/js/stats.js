@@ -6,6 +6,9 @@ var StatsController = {
     init: function() {
         this.series = this.parseHash(document.TempData);
         this.period = this.getUrlParam("period");
+        if (this.period == "") {
+            this.period = "5m"
+        }
         $('.period').each(function(i, el){
             if($(el).html() == StatsController.period) {
                 $(el).addClass('active');
